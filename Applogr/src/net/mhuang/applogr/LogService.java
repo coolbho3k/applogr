@@ -6,8 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Pattern;
 
 import com.google.gson.Gson;
@@ -20,10 +18,8 @@ import net.mhuang.applogr.util.LogcatBuffer;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Build;
@@ -35,11 +31,8 @@ import android.util.Log;
 public class LogService extends Service implements LogcatBuffer.OnLineReadListener {
 	
 	private AppList mAppList;
-	private static Gson mJson;
+	private Gson mJson;
 	
-	static {
-		mJson = new Gson();
-	}
 	
 	Notification mNotify;
 		
@@ -72,10 +65,14 @@ public class LogService extends Service implements LogcatBuffer.OnLineReadListen
 	private LogcatBuffer mLogcat;
 	
 	private int mRetval = START_STICKY;
+	
+	private ResolveInfo mSystemResolver;
 
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		
+		mJson = new Gson();
 		
 		Intent intent = new Intent(); 
 		intent.setAction(Intent.ACTION_MAIN); 
@@ -83,6 +80,10 @@ public class LogService extends Service implements LogcatBuffer.OnLineReadListen
         PackageManager pm = this.getPackageManager(); 
         ResolveInfo info = pm.resolveActivity(intent, 0); 
         mLauncherPackage = info.activityInfo.packageName;
+        
+        Intent systemIntent = new Intent(); 
+		intent.setAction(Intent.ACTION_MAIN); 
+        mSystemResolver = pm.resolveActivity(systemIntent, 0); 
 		
 		Intent resultIntent = new Intent(this, MainActivity.class);
 		
@@ -110,15 +111,19 @@ public class LogService extends Service implements LogcatBuffer.OnLineReadListen
 
 		startForeground(1, mBuilder.build());
 				
-		final File directory = getDir("database", Context.MODE_PRIVATE);
+		final File directory = new File("/sdcard");
 		mSaveFile = new File(directory.getAbsolutePath() + "/"
 				+ "applist.json");
+		Log.d("applogr", mSaveFile.getAbsolutePath());
+		
 		
 		if(!mSaveFile.exists()) {
 			mAppList = new AppList();
 			mAppList.setContext(this);
 			save();
 		}
+		
+		save();
 		
 		try {
 				mAppList = mJson.fromJson(new FileReader(mSaveFile),
@@ -175,22 +180,27 @@ public class LogService extends Service implements LogcatBuffer.OnLineReadListen
 		 */
 		if(eventName.equals(AM_RESUME_ACTIVITY)
 				|| eventName.equals(ACTIVITY_LAUNCH_TIME)
-				|| eventName.equals(AM_CREATE_ACTIVITY)) {	
+				|| eventName.equals(AM_CREATE_ACTIVITY)) {
+						
+					//mAppList.resort();
 			
 					Log.d("Applogr", packageName);
 			
 					/* Check if this app is a launcher app or this app */
 					if(packageName.equals(getPackageName())) {
 						log = false;
-						mForegroundApp = null;
 					}
 					else if(packageName.equals(mLauncherPackage)) {
 						log = false;
-						mForegroundApp = null;
 					}
-			
+					else if(packageName.equals("com.android.systemui")) {
+						log = false;
+					}
+					
 					/* Stop recording time for the previous app */
-					if(mForegroundApp != null && mForegroundApp.timerIsStarted()) {
+					if(mForegroundApp != null && mForegroundApp.timerIsStarted() &&
+							!mForegroundApp.getPackage().equals(packageName)) {
+						Log.d("Applogr", "Stopped timer");
 						mForegroundApp.saveTimer();
 					}
 					
@@ -198,7 +208,9 @@ public class LogService extends Service implements LogcatBuffer.OnLineReadListen
 					if(log) {
 						if(mAppList.hasPackage(packageName)) {
 							if(mForegroundApp != mAppList.getApp(packageName)) {
-								mAppList.getApp(packageName).incrementLaunchCount();
+								if(!eventName.equals(AM_RESUME_ACTIVITY)) {
+									mAppList.getApp(packageName).incrementLaunchCount();
+								}
 								mForegroundApp = mAppList.getApp(packageName);
 							}
 							
@@ -209,9 +221,8 @@ public class LogService extends Service implements LogcatBuffer.OnLineReadListen
 							mForegroundApp = newApp;
 							mForegroundApp.incrementLaunchCount();
 						}
-						if(!mForegroundApp.timerIsStarted()) {
+							Log.d("Applogr","Starting timer");
 							mForegroundApp.setTimer();
-						}
 					}
 					save();
 				}
@@ -246,14 +257,20 @@ public class LogService extends Service implements LogcatBuffer.OnLineReadListen
 	
 	private void save() {
 		try {
+			if(!mSaveFile.exists()) {
+				mSaveFile.createNewFile();
+			} 
+			
+			if(mAppList != null) {
 			BufferedWriter out = new BufferedWriter(new FileWriter(mSaveFile));
 			out.write(mAppList.toJson());
 			out.flush();
 			out.close();
+			Log.d("Applogr", mAppList.toJson());
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		Log.d("Applogr", mAppList.toJson());
 		
 		
 	}

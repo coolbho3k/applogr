@@ -14,7 +14,7 @@ public class AppList {
 	
 	protected Set<App> apps;
 	private transient static Gson mJson;
-	protected transient int mSortMode = SORT_MODE_TIME;
+	protected transient int mSortMode = SORT_MODE_LAUNCH;
 	protected transient Context mContext;
 	
 	static {
@@ -31,6 +31,9 @@ public class AppList {
 		mContext = context;
 		
 		if(!apps.isEmpty()) {
+			
+			resort();
+			
 			for(App app : apps) {
 				if(app.getPackage() != null) {
 					try {
@@ -49,19 +52,11 @@ public class AppList {
 	}
 	
 	public boolean addApp(App app) {
-		if(app.getParent() == null) {
-			app.setParent(this);
-			return apps.add(app);
-		}
-		return false;
+		return apps.add(app);
 	}
 	
 	public boolean removeApp(App app) {
-		if(apps.contains(app)) {
-			app.setParent(null);
-			return apps.remove(app);
-		}
-		return false;
+		return apps.remove(app);
 	}
 	
 	public App getApp(String pkg) {
@@ -90,12 +85,14 @@ public class AppList {
 		mSortMode = sortMode;
 	}
 	
-	public void sort() {
-		Set<App> newApps = new TreeSet<App>(apps);
-		apps = newApps;
+	public Set<App> getApps() {
+		return apps;
 	}
 	
-	public Set<App> getApps() {
+	public Set<App> resort() {
+		Set<App> newSet = new TreeSet<App>();  
+		newSet.addAll(apps);
+		apps = newSet;
 		return apps;
 	}
 }

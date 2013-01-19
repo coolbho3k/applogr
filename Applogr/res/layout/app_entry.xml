@@ -1,14 +1,16 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
     android:gravity="center"
+    android:clickable="true"
+    android:background="@drawable/list_selector_holo_dark"
+    android:padding="5dp"
     >
  
     <ImageView
 		android:id="@+id/icon"
-		android:layout_width="wrap_content"
-    	android:layout_height="wrap_content"
+		android:layout_width="48dp"
+    	android:layout_height="48dp"
     	android:layout_weight="1"
     	android:src="@drawable/ic_launcher"
 		/>
@@ -25,14 +27,21 @@
     	    android:layout_width="fill_parent"
     	    android:layout_height="wrap_content"
     	    android:text="Test App"
-    	    android:textSize="16sp"
+    	    android:textSize="14sp"
+    	    android:maxWidth="70dp"
+    	    android:maxLines="1"
     	    />
     	<TextView
+    	    android:visibility="gone"
     	    android:id="@+id/user"
     	    android:layout_width="fill_parent"
     	    android:layout_height="wrap_content"
     	    android:text="Test, Test2, and 5 others"
     	    android:textSize="8sp"
+    	        	    android:maxWidth="50dp"
+    	        	    android:maxLines="1"
+    	    
+    	    
     	 />
     	 <TextView
     	    android:id="@+id/count"
@@ -40,6 +49,8 @@
     	    android:layout_height="wrap_content"
     	    android:text="321 uses"
     	    android:textSize="8sp"
+    	        	    android:maxWidth="50dp"
+    	    
     	 />
     	 <TextView
     	    android:id="@+id/time"
@@ -47,6 +58,10 @@
     	    android:layout_height="wrap_content"
     	    android:text="5 hours 31 minutes"
     	    android:textSize="8sp"
+    	        	    android:maxWidth="50dp"
+    	        	        	    android:maxLines="1"
+    	        	    
+    	    
     	 />
 
         

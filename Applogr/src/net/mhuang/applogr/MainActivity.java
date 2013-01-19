@@ -1,8 +1,15 @@
 package net.mhuang.applogr;
 
+import com.parse.LogInCallback;
+import com.parse.Parse;
+import com.parse.ParseFacebookUtils;
+import com.parse.ParseUser;
+import com.parse.ParseException;
+
 import net.mhuang.applogr.fragment.FriendsFragment;
 import net.mhuang.applogr.fragment.LauncherFragment;
 import net.mhuang.applogr.fragment.TopFragment;
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -38,22 +45,51 @@ public class MainActivity extends FragmentActivity {
 	 * The {@link ViewPager} that will host the section contents.
 	 */
 	ViewPager mViewPager;
+	private ParseUser mUser;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		
+		Parse.initialize(this, "giaAvAdfbvmHqKXTFvlZtPkEPuGlltgp4Mw8shLj", "AmQVRsEVEBgG2uARZgFbW1FL47TirAJEJRpuGsMw");
+		ParseFacebookUtils.initialize("357619824345200");
+		
+		ParseFacebookUtils.logIn(this, new LogInCallback() {
+			  @Override
+			  public void done(ParseUser user, ParseException err) {
+			    if (user == null) {
+			      Log.d("applogr", "Uh oh. The user cancelled the Facebook login.");
+			      //setup();
 
+			    } else if (user.isNew()) {
+			      mUser = user;
+			      Log.d("applogr", "User signed up and logged in through Facebook!");
+			      setup();
+			    } else {
+			      mUser = user;
+			      Log.d("applogr", "User logged in through Facebook!");
+			      setup();
+			    }
+			  }
+			});
+	}
+	
+	private void setup() {
+		
+		
 		// Create the adapter that will return a fragment for each of the three
 		// primary sections of the app.
 		mSectionsPagerAdapter = new SectionsPagerAdapter(
-				getSupportFragmentManager());
+			getSupportFragmentManager());
 
 		// Set up the ViewPager with the sections adapter.
 		mViewPager = (ViewPager) findViewById(R.id.pager);
 		mViewPager.setAdapter(mSectionsPagerAdapter);
-		
+				
 		startService(new Intent(this, LogService.class));
+		
+	      ParseFacebookUtils.saveLatestSessionData(mUser);
 
 	}
 
@@ -106,20 +142,33 @@ public class MainActivity extends FragmentActivity {
 		@Override
 		public int getCount() {
 			// Show 3 total pages.
-			return 3;
+			return 2;
 		}
 
 		@Override
 		public CharSequence getPageTitle(int position) {
 			switch (position) {
 			case 0:
-				return "My Apps".toUpperCase();
+				return "My Top Apps".toUpperCase();
 			case 1:
-				return "All Apps".toUpperCase();
-			case 2:
 				return "Friends".toUpperCase();
 			}
 			return null;
-		}
+		}	
 	}
+	
+	@Override
+	public void onResume() {
+		super.onResume();
+		
+		if(mUser != null)
+			setup();
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+	  super.onActivityResult(requestCode, resultCode, data);
+	  ParseFacebookUtils.finishAuthentication(requestCode, resultCode, data);
+	}
+	
 }
