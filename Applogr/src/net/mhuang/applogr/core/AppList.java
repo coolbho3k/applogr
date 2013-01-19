@@ -1,5 +1,8 @@
 package net.mhuang.applogr.core;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -12,7 +15,7 @@ public class AppList {
 	public static final transient int SORT_MODE_TIME = 0;
 	public static final transient int SORT_MODE_LAUNCH = 1;
 	
-	protected Set<App> apps;
+	protected List<App> apps;
 	private transient static Gson mJson;
 	protected transient int mSortMode = SORT_MODE_LAUNCH;
 	protected transient Context mContext;
@@ -23,17 +26,14 @@ public class AppList {
 	
 	public AppList() {		
 		if(apps == null) {
-			apps = new TreeSet<App>();
+			apps = new ArrayList<App>();
 		}
 	}
 	
 	public void setContext(Context context) {
 		mContext = context;
 		
-		if(!apps.isEmpty()) {
-			
-			resort();
-			
+		if(!apps.isEmpty()) {			
 			for(App app : apps) {
 				if(app.getPackage() != null) {
 					try {
@@ -44,6 +44,7 @@ public class AppList {
 					}
 				}
 			}
+			resort();
 		}
 	}
 	
@@ -85,14 +86,11 @@ public class AppList {
 		mSortMode = sortMode;
 	}
 	
-	public Set<App> getApps() {
+	public List<App> getApps() {
 		return apps;
 	}
 	
-	public Set<App> resort() {
-		Set<App> newSet = new TreeSet<App>();  
-		newSet.addAll(apps);
-		apps = newSet;
-		return apps;
+	public void resort() {
+		Collections.sort(apps);
 	}
 }

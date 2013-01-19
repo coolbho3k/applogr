@@ -90,7 +90,7 @@ public class MainActivity extends FragmentActivity {
 		startService(new Intent(this, LogService.class));
 		
 	      ParseFacebookUtils.saveLatestSessionData(mUser);
-
+	      
 	}
 
 	@Override
@@ -119,13 +119,13 @@ public class MainActivity extends FragmentActivity {
 				}
 				ret = mLauncherFragment;
 			}
-			else if(position == 1) {
+			else if(position == 2) {
 				if(mFriendsFragment == null) {
 					mFriendsFragment = new FriendsFragment();
 				}
 				ret = mFriendsFragment;
 			}
-			else if(position == 2) {
+			else if(position == 1) {
 				if(mTopFragment == null) {
 					mTopFragment = new TopFragment();
 				}
@@ -151,7 +151,7 @@ public class MainActivity extends FragmentActivity {
 			case 0:
 				return "My Top Apps".toUpperCase();
 			case 1:
-				return "Friends".toUpperCase();
+				return "All Top Apps".toUpperCase();
 			}
 			return null;
 		}	

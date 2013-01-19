@@ -30,6 +30,9 @@ public class LauncherFragment extends AppGridFragment {
 	public void onResume() {
 		super.onResume();
 		
+		refresh();
+		populateGrid();
+		mEntryAdapter.notifyDataSetChanged();
 		
 	}
 
@@ -55,9 +58,11 @@ public class LauncherFragment extends AppGridFragment {
 	public void refresh() {
 		try {
 			mJson = new Gson();
+			mAppList = new AppList();
 			mAppList = mJson.fromJson(new FileReader(mSaveFile),
 					AppList.class);
 			mAppList.setContext(mContext);
+			//mAppList.resort();
 			Log.d("Applogr Fragment", mJson.toJson(mAppList));
 		} catch (JsonSyntaxException e) {
 			e.printStackTrace();
