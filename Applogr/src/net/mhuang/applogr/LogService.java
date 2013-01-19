@@ -6,6 +6,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import com.google.gson.Gson;
@@ -18,8 +20,12 @@ import net.mhuang.applogr.util.LogcatBuffer;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
@@ -39,6 +45,7 @@ public class LogService extends Service implements LogcatBuffer.OnLineReadListen
 		
 	private App mForegroundApp;
 	private File mSaveFile;
+	private String mLauncherPackage;
 	
 	/* The line offset by one on Android 4.2+ */
 	private int mOffset = 0;
@@ -69,6 +76,13 @@ public class LogService extends Service implements LogcatBuffer.OnLineReadListen
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		
+		Intent intent = new Intent(); 
+		intent.setAction(Intent.ACTION_MAIN); 
+		intent.addCategory(Intent.CATEGORY_HOME); 
+        PackageManager pm = this.getPackageManager(); 
+        ResolveInfo info = pm.resolveActivity(intent, 0); 
+        mLauncherPackage = info.activityInfo.packageName;
 		
 		Intent resultIntent = new Intent(this, MainActivity.class);
 		
@@ -102,12 +116,14 @@ public class LogService extends Service implements LogcatBuffer.OnLineReadListen
 		
 		if(!mSaveFile.exists()) {
 			mAppList = new AppList();
+			mAppList.setContext(this);
 			save();
 		}
 		
 		try {
 				mAppList = mJson.fromJson(new FileReader(mSaveFile),
 						AppList.class);
+				mAppList.setContext(this);
 		} catch (JsonSyntaxException e) {
 			e.printStackTrace();
 			mRetval = START_NOT_STICKY;
@@ -141,7 +157,9 @@ public class LogService extends Service implements LogcatBuffer.OnLineReadListen
 	}
 
 	@Override
-	public void onLineRead(String read) {		
+	public void onLineRead(String read) {
+		boolean log = true;
+		
 		if(read == null) {
 			mLogcat.stop();
 			mLogcat = new LogcatBuffer(COMMAND, this);
@@ -150,7 +168,6 @@ public class LogService extends Service implements LogcatBuffer.OnLineReadListen
 		}
 		
 		String packageName = getPackageName(read);
-		String activityName = getActivityName(read);
 		String eventName = getEventName(read);
 						
 		/* If we've resumed or launched an Activity, that Activity MUST now
@@ -158,12 +175,18 @@ public class LogService extends Service implements LogcatBuffer.OnLineReadListen
 		 */
 		if(eventName.equals(AM_RESUME_ACTIVITY)
 				|| eventName.equals(ACTIVITY_LAUNCH_TIME)
-				|| eventName.equals(AM_CREATE_ACTIVITY)) {
-					Log.d("AppLogr",packageName+"/"+activityName);
+				|| eventName.equals(AM_CREATE_ACTIVITY)) {	
+			
+					Log.d("Applogr", packageName);
 			
 					/* Check if this app is a launcher app or this app */
-					if(packageName.equals("net.mhuang.applogr")) {
-						
+					if(packageName.equals(getPackageName())) {
+						log = false;
+						mForegroundApp = null;
+					}
+					else if(packageName.equals(mLauncherPackage)) {
+						log = false;
+						mForegroundApp = null;
 					}
 			
 					/* Stop recording time for the previous app */
@@ -172,17 +195,23 @@ public class LogService extends Service implements LogcatBuffer.OnLineReadListen
 					}
 					
 					/* Start recording time for this app */
-					if(mAppList.hasPackage(packageName)) {
-						mForegroundApp = mAppList.getApp(packageName);
-					}
-					else {
-						App newApp = new App(packageName);
-						mAppList.addApp(newApp);
-						mForegroundApp = newApp;
-					}
-					
-					if(!mForegroundApp.timerIsStarted()) {
-						mForegroundApp.setTimer();
+					if(log) {
+						if(mAppList.hasPackage(packageName)) {
+							if(mForegroundApp != mAppList.getApp(packageName)) {
+								mAppList.getApp(packageName).incrementLaunchCount();
+								mForegroundApp = mAppList.getApp(packageName);
+							}
+							
+						}
+						else {
+							App newApp = new App(packageName);
+							mAppList.addApp(newApp);
+							mForegroundApp = newApp;
+							mForegroundApp.incrementLaunchCount();
+						}
+						if(!mForegroundApp.timerIsStarted()) {
+							mForegroundApp.setTimer();
+						}
 					}
 					save();
 				}

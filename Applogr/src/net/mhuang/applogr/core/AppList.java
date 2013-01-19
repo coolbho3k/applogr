@@ -3,6 +3,9 @@ package net.mhuang.applogr.core;
 import java.util.Set;
 import java.util.TreeSet;
 
+import android.content.Context;
+import android.content.pm.PackageManager.NameNotFoundException;
+
 import com.google.gson.Gson;
 
 public class AppList {
@@ -12,14 +15,32 @@ public class AppList {
 	protected Set<App> apps;
 	private transient static Gson mJson;
 	protected transient int mSortMode = SORT_MODE_TIME;
+	protected transient Context mContext;
 	
 	static {
 		mJson = new Gson();
 	}
 	
-	public AppList() {
+	public AppList() {		
 		if(apps == null) {
 			apps = new TreeSet<App>();
+		}
+	}
+	
+	public void setContext(Context context) {
+		mContext = context;
+		
+		if(!apps.isEmpty()) {
+			for(App app : apps) {
+				if(app.getPackage() != null) {
+					try {
+						app.setInfo(mContext.getPackageManager()
+						.getApplicationInfo(app.getPackage(), 0));
+					} catch (NameNotFoundException e) {
+						removeApp(app);
+					}
+				}
+			}
 		}
 	}
 	
@@ -45,7 +66,7 @@ public class AppList {
 	
 	public App getApp(String pkg) {
 		for(App app : apps) {
-			if(app.getPackage() == pkg) {
+			if(app.getPackage().equals(pkg)) {
 				return app;
 			}
 		}
@@ -54,7 +75,7 @@ public class AppList {
 	
 	public boolean hasPackage(String pkg) {
 		for(App app : apps) {
-			if(app.getPackage() == pkg) {
+			if(app.getPackage().equals(pkg)) {
 				return true;
 			}
 		}
@@ -67,5 +88,14 @@ public class AppList {
 	
 	public void setSortMode(int sortMode) {
 		mSortMode = sortMode;
+	}
+	
+	public void sort() {
+		Set<App> newApps = new TreeSet<App>(apps);
+		apps = newApps;
+	}
+	
+	public Set<App> getApps() {
+		return apps;
 	}
 }

@@ -113,11 +113,11 @@ public class MainActivity extends FragmentActivity {
 		public CharSequence getPageTitle(int position) {
 			switch (position) {
 			case 0:
-				return getString(R.string.title_section1).toUpperCase();
+				return "My Apps".toUpperCase();
 			case 1:
-				return getString(R.string.title_section2).toUpperCase();
+				return "All Apps".toUpperCase();
 			case 2:
-				return getString(R.string.title_section3).toUpperCase();
+				return "Friends".toUpperCase();
 			}
 			return null;
 		}
