@@ -14,11 +14,7 @@ import android.os.Build;
 import android.util.Log;
 
 public class Utils {
-	
-	public static final String CPUFREQ_DIR = "/sys/devices/system/cpu/";
-	//public static final String ROOT_BIN = "/system/bin/su";
-	//public static final String SHELL_BIN = "sh";
-	
+
     static byte[] buffer = new byte[1024]; //Reserve 512B for file reads
 	static FileInputStream is;
 	
@@ -96,48 +92,6 @@ public class Utils {
         }
         return null;
     }
-	
-	//Autodetect using older method time_in_state (all kernels 2.6.29+)
-	public static String[] autodetect() {
-		
-		String retCheck;
-		
-		try {
-		String time_in_state = readFile("/sys/devices/system/cpu/cpu0/cpufreq/stats/time_in_state");
-		if(time_in_state == null || time_in_state == "") {
-			time_in_state = readFile("/sys/devices/system/cpu/cpu0/cpufreq/frequency_voltage_table");
-		}
-		if(time_in_state == null || time_in_state == "" ) {
-			time_in_state= readFile("/sys/devices/system/cpu/cpu0/cpufreq/FakeShmoo_freq_voltage_table");
-		}
-		if(time_in_state == null || time_in_state == "" ) {
-			time_in_state= readFile("/sys/devices/system/cpu/cpu0/cpufreq/freq_voltage_table");
-		}
-		if(time_in_state != null) {
-			time_in_state.trim();
-			String[] ret = time_in_state.split("\n");
-			for(int i = 0; i < ret.length; i++) {
-				retCheck = ret[i].split(" ")[0];
-				try {
-					Integer.parseInt(retCheck);
-					ret[i] = retCheck;
-				}
-				catch(Exception e) {
-					e.printStackTrace();
-					continue;
-				}
-			}
-			return ret;
-		}
-		else {
-		return null;
-		}
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
 
 	public static void copyFile(File src, File dst) throws IOException {
 	      FileChannel inChannel = new FileInputStream(src).getChannel();
@@ -225,9 +179,7 @@ public static String getYeshup(Context context) {
 	File dir = context.getDir("bin",
 			Context.MODE_PRIVATE);
 	File yeshup = new File(dir.getAbsolutePath() + "/yeshup");
-	
-	//Log.d("setcpu", "getting yeshup");
-	
+		
 	/* Check if yeshup exists */
 	if(yeshup.exists()) {
 		try {

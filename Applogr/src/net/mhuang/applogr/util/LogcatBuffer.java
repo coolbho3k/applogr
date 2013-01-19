@@ -10,8 +10,7 @@ import android.os.Build;
 import android.util.Log;
 
 
-/* LogcatBuffer.java
- * 
+/**
  * A threaded class for listening to logcat. Designed only to read from the
  * events log for now.
  */
@@ -48,9 +47,7 @@ public class LogcatBuffer implements Runnable {
 				android.os.Process.THREAD_PRIORITY_BACKGROUND);
 		
 		Process process = null;
-		
-		//Log.d("setcpu", "Logcat Buffer");
-				
+						
     	try {
 			process = Runtime.getRuntime().exec(yeshup + " logcat -b events -c");
 			
