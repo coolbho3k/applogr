@@ -86,6 +86,8 @@ public class MainActivity extends FragmentActivity {
 		// Set up the ViewPager with the sections adapter.
 		mViewPager = (ViewPager) findViewById(R.id.pager);
 		mViewPager.setAdapter(mSectionsPagerAdapter);
+		
+		mViewPager.setCurrentItem(1);
 				
 		startService(new Intent(this, LogService.class));
 		
@@ -114,18 +116,18 @@ public class MainActivity extends FragmentActivity {
 		public Fragment getItem(int position) {
 			Fragment ret = null;
 			if(position == 0) {
-				if(mLauncherFragment == null) {
-					mLauncherFragment = new LauncherFragment();
-				}
-				ret = mLauncherFragment;
-			}
-			else if(position == 2) {
 				if(mFriendsFragment == null) {
 					mFriendsFragment = new FriendsFragment();
 				}
 				ret = mFriendsFragment;
 			}
 			else if(position == 1) {
+				if(mLauncherFragment == null) {
+					mLauncherFragment = new LauncherFragment();
+				}
+				ret = mLauncherFragment;
+			}
+			else if(position == 2) {
 				if(mTopFragment == null) {
 					mTopFragment = new TopFragment();
 				}
@@ -142,16 +144,18 @@ public class MainActivity extends FragmentActivity {
 		@Override
 		public int getCount() {
 			// Show 3 total pages.
-			return 2;
+			return 3;
 		}
 
 		@Override
 		public CharSequence getPageTitle(int position) {
 			switch (position) {
 			case 0:
-				return "My Top Apps".toUpperCase();
+				return "Following".toUpperCase();
 			case 1:
-				return "All Top Apps".toUpperCase();
+				return "Top Apps".toUpperCase();
+			case 2:
+				return "Popular".toUpperCase();
 			}
 			return null;
 		}	

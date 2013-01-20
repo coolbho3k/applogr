@@ -11,6 +11,7 @@ import net.mhuang.applogr.fragment.AppGridFragment.AppEntry;
 
 import com.facebook.Session;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
 import com.parse.ParseFacebookUtils;
